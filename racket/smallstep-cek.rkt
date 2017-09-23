@@ -65,6 +65,10 @@
 (struct ar (e rho kappa))
 (struct fn (v rho kappa))
 
+; Injection, build an initial state
+(define (inject e)
+  (list e empty-env (mt)))
+
 ; Step function
 
 (define (step sigma)
@@ -72,10 +76,38 @@
     ; First rule in Fig 1
     [`(,(? symbol? x) ,rho ,kappa)
      (match-let
-         ([(cons val rho2) `(,val ,rho2 ,kappa)])
-       (lookup x rho))]))
+         ([(cons v rho2) (lookup x rho)])
+       (list v rho2 kappa))]
+    ; Second rule
+    [`((,e0 ,e1) ,rho ,kappa)
+     `(,e0 ,rho ,(ar e1 rho kappa))]
+    ; Third rule
+    [`(,(? v? v) ,rho ,(ar e rhop kappa))
+     `(,e ,rhop ,(fn v rho kappa))]
+    ; Fourth rule
+    [`(,(? v? v) ,rho ,(fn `(λ ,x ,e) rhop kappa))
+     `(,e ,(extend-env x (cons v rho) rhop) ,kappa)]
+    [else sigma]))
 
+(define (iter e)
+  (begin
+    (display e)
+    (display "-->\n")
+    (let [(next (step e))]
+      (if (equal? next e)
+          (display "done")
+          (iter next)))))
 
-       
+(define s (inject '((λ x x) (λ y y))))
 
-
+; See what happens when you type in
+; (iter s)
+; > (iter s)
+;
+; Dr Racket shows...
+; (((λ x x) (λ y y)) #hash() #<mt>)-->
+; ((λ x x) #hash() #<ar>)-->
+; ((λ y y) #hash() #<fn>)-->
+; (x #hash((x . ((λ y y) . #hash()))) #<mt>)-->
+; ((λ y y) #hash() #<mt>)-->
+; done
