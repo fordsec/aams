@@ -92,10 +92,10 @@
 (define (iter e)
   (begin
     (display e)
-    (display "-->\n")
+    (display "\n-->\n")
     (let [(next (step e))]
       (if (equal? next e)
-          (display "done")
+          (display "done\n")
           (iter next)))))
 
 (define s (inject '((λ x x) (λ y y))))
@@ -111,3 +111,11 @@
 ; (x #hash((x . ((λ y y) . #hash()))) #<mt>)-->
 ; ((λ y y) #hash() #<mt>)-->
 ; done
+
+(define (repl)
+  (begin
+    (display "type in a term composed of only lambdas")
+    (iter (inject (read)))
+    (repl)))
+
+(repl)
